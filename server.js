@@ -131,32 +131,43 @@ const startServer = async () => {
         // Test database connection
         const dbConnected = await testConnection();
         if (!dbConnected) {
-            console.error('Failed to connect to database. Exiting...');
-            process.exit(1);
+            console.error('❌ Failed to connect to database.');
+            // Only exit on local development; don't crash the serverless container during init
+            if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
+                process.exit(1);
+            }
         }
         
-        // Start listening
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-        });
+        // Start listening (Only if not running in a Serverless/Vercel environment)
+        if (process.env.VERCEL !== '1') {
+            app.listen(PORT, () => {
+                console.log(`🚀 Server running on port ${PORT}`);
+                console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+                console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+            });
+        } else {
+            console.log('⚡ Server initialized in Serverless/Vercel environment');
+        }
     } catch (error) {
         console.error('Failed to start server:', error);
-        process.exit(1);
+        if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
+            process.exit(1);
+        }
     }
 };
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
-    process.exit(0);
-});
+// Handle graceful shutdown (Only if not running on Vercel)
+if (process.env.VERCEL !== '1') {
+    process.on('SIGTERM', () => {
+        console.log('SIGTERM received. Shutting down gracefully...');
+        process.exit(0);
+    });
 
-process.on('SIGINT', () => {
-    console.log('SIGINT received. Shutting down gracefully...');
-    process.exit(0);
-});
+    process.on('SIGINT', () => {
+        console.log('SIGINT received. Shutting down gracefully...');
+        process.exit(0);
+    });
+}
 
 // Start the server
 startServer();

@@ -2,6 +2,14 @@
 
 USE hospital_appointment_system;
 
+-- Drop procedures if they exist to allow clean re-runs
+DROP PROCEDURE IF EXISTS AutoAssignDoctor;
+DROP PROCEDURE IF EXISTS FindAvailableDoctors;
+DROP PROCEDURE IF EXISTS GetAppointmentStats;
+DROP PROCEDURE IF EXISTS GetPatientAppointmentHistory;
+DROP PROCEDURE IF EXISTS UpdateAppointmentStatus;
+DROP PROCEDURE IF EXISTS GetDoctorUpcomingAppointments;
+
 -- 1. Procedure to auto-assign an alternative doctor when one is unavailable
 DELIMITER //
 
@@ -192,7 +200,7 @@ END //
 -- 4. Procedure to get patient appointment history
 CREATE PROCEDURE GetPatientAppointmentHistory(
     IN p_patient_id INT,
-    IN p_limit INT DEFAULT 10
+    IN p_limit INT
 )
 BEGIN
     SELECT 
@@ -283,7 +291,7 @@ END //
 -- 6. Procedure to get doctor's upcoming appointments
 CREATE PROCEDURE GetDoctorUpcomingAppointments(
     IN p_doctor_id INT,
-    IN p_days_ahead INT DEFAULT 7
+    IN p_days_ahead INT
 )
 BEGIN
     SELECT 

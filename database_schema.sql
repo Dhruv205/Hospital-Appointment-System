@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS Doctor_Specialization;
 DROP TABLE IF EXISTS Specialization;
 DROP TABLE IF EXISTS Doctor;
 DROP TABLE IF EXISTS Patient;
+DROP TABLE IF EXISTS Blacklisted_Tokens;
 
 -- 1. Patient Table
 CREATE TABLE Patient (
