@@ -13,12 +13,13 @@ router.get('/dashboard', authenticateToken, requirePatient, async (req, res) => 
         const upcomingQuery = `
             SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
                    CONCAT(d.first_name, ' ', d.last_name) AS doctor_name,
-                   s.spec_name AS specialization
+                   GROUP_CONCAT(s.spec_name SEPARATOR ', ') AS specialization
             FROM Appointment a
             JOIN Doctor d ON a.doctor_id = d.doctor_id
             LEFT JOIN Doctor_Specialization ds ON d.doctor_id = ds.doctor_id
             LEFT JOIN Specialization s ON ds.spec_id = s.spec_id
             WHERE a.patient_id = ? AND a.appointment_date >= CURDATE()
+            GROUP BY a.appointment_id
             ORDER BY a.appointment_date ASC, a.appointment_time ASC
             LIMIT 5
         `;
@@ -59,12 +60,13 @@ router.get('/dashboard', authenticateToken, requirePatient, async (req, res) => 
                 a.status,
                 a.problem_description,
                 CONCAT(d.first_name, ' ', d.last_name) AS doctor_name,
-                s.spec_name AS specialization
+                GROUP_CONCAT(s.spec_name SEPARATOR ', ') AS specialization
             FROM Appointment a
             JOIN Doctor d ON a.doctor_id = d.doctor_id
             LEFT JOIN Doctor_Specialization ds ON d.doctor_id = ds.doctor_id
             LEFT JOIN Specialization s ON ds.spec_id = s.spec_id
             WHERE a.patient_id = ?
+            GROUP BY a.appointment_id
             ORDER BY a.appointment_date DESC, a.appointment_time DESC
             LIMIT 6
         `;
@@ -200,7 +202,7 @@ router.get('/appointments/history', authenticateToken, requirePatient, async (re
             SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
                    a.problem_description, a.created_at,
                    CONCAT(d.first_name, ' ', d.last_name) AS doctor_name,
-                   s.spec_name AS specialization
+                   GROUP_CONCAT(s.spec_name SEPARATOR ', ') AS specialization
             FROM Appointment a
             JOIN Doctor d ON a.doctor_id = d.doctor_id
             LEFT JOIN Doctor_Specialization ds ON d.doctor_id = ds.doctor_id
@@ -215,7 +217,7 @@ router.get('/appointments/history', authenticateToken, requirePatient, async (re
             params.push(status);
         }
 
-        query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ? OFFSET ?';
+        query += ' GROUP BY a.appointment_id ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), parseInt(offset));
 
         const result = await executeQuery(query, params);

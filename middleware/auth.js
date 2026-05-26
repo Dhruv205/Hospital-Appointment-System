@@ -16,6 +16,15 @@ const authenticateToken = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
+        // Check if token is blacklisted
+        const blacklistCheck = await executeQuery('SELECT token FROM Blacklisted_Tokens WHERE token = ?', [token]);
+        if (blacklistCheck.success && blacklistCheck.data.length > 0) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session expired (logged out)'
+            });
+        }
+        
         // Verify user still exists in database
         const userQuery = `
             SELECT user_id, user_type, email, first_name, last_name 
@@ -100,6 +109,13 @@ const optionalAuth = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Check if token is blacklisted
+        const blacklistCheck = await executeQuery('SELECT token FROM Blacklisted_Tokens WHERE token = ?', [token]);
+        if (blacklistCheck.success && blacklistCheck.data.length > 0) {
+            req.user = null;
+            return next();
+        }
         
         const userQuery = `
             SELECT user_id, user_type, email, first_name, last_name 

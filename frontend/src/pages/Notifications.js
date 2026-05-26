@@ -66,8 +66,8 @@ const Notifications = () => {
     }
   );
 
-  const notifications = notificationsData?.data || [];
-  const unreadCount = unreadData?.data?.unreadCount || 0;
+  const notifications = notificationsData?.data?.data || [];
+  const unreadCount = unreadData?.data?.data?.unreadCount || 0;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('en-US', {

@@ -117,7 +117,7 @@ router.get('/patient', authenticateToken, requirePatient, async (req, res) => {
                    a.problem_description, a.symptoms, a.created_at, a.updated_at,
                    CONCAT(d.first_name, ' ', d.last_name) AS doctor_name,
                    d.email AS doctor_email, d.phone AS doctor_phone,
-                   s.spec_name AS specialization
+                   GROUP_CONCAT(s.spec_name SEPARATOR ', ') AS specialization
             FROM Appointment a
             JOIN Doctor d ON a.doctor_id = d.doctor_id
             LEFT JOIN Doctor_Specialization ds ON d.doctor_id = ds.doctor_id
@@ -137,7 +137,7 @@ router.get('/patient', authenticateToken, requirePatient, async (req, res) => {
             params.push(date);
         }
 
-        query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ? OFFSET ?';
+        query += ' GROUP BY a.appointment_id ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), parseInt(offset));
 
         const result = await executeQuery(query, params);
@@ -232,7 +232,7 @@ router.get('/:appointmentId', authenticateToken, async (req, res) => {
                    p.email AS patient_email, p.phone AS patient_phone,
                    CONCAT(d.first_name, ' ', d.last_name) AS doctor_name,
                    d.email AS doctor_email, d.phone AS doctor_phone,
-                   s.spec_name AS specialization
+                   GROUP_CONCAT(s.spec_name SEPARATOR ', ') AS specialization
             FROM Appointment a
             JOIN Patient p ON a.patient_id = p.patient_id
             JOIN Doctor d ON a.doctor_id = d.doctor_id
@@ -252,6 +252,7 @@ router.get('/:appointmentId', authenticateToken, async (req, res) => {
             params.push(userId);
         }
 
+        query += ' GROUP BY a.appointment_id';
         const result = await executeQuery(query, params);
 
         if (!result.success) {
@@ -319,51 +320,7 @@ router.put('/:appointmentId/status', authenticateToken, requireDoctor, [
 
         const appointment = checkResult.data[0];
 
-        // If status is 'rejected', delete the appointment instead of updating status
-        if (status === 'rejected') {
-            // Build rejection notification message
-            let notificationMessage = `Your appointment request for ${appointment.appointment_date} at ${appointment.appointment_time} has been rejected. Please contact us to reschedule.`;
-            if (message) {
-                notificationMessage = `${notificationMessage} Doctor Note: ${message}`;
-            }
-
-            // Create notification first (before deletion)
-            // Note: Due to CASCADE, this notification will be deleted when appointment is deleted
-            // But we create it anyway for consistency
-            const notificationQuery = `
-                INSERT INTO Notification (appointment_id, patient_id, doctor_id, message, notification_type)
-                VALUES (?, ?, ?, ?, 'appointment_rejected')
-            `;
-            await executeQuery(notificationQuery, [
-                appointmentId,
-                appointment.patient_id,
-                doctorId,
-                notificationMessage
-            ]);
-
-            // Delete the appointment (this will cascade delete the notification we just created)
-            const deleteQuery = 'DELETE FROM Appointment WHERE appointment_id = ?';
-            const deleteResult = await executeQuery(deleteQuery, [appointmentId]);
-
-            if (!deleteResult.success || deleteResult.data.affectedRows === 0) {
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to delete appointment',
-                    error: deleteResult.error
-                });
-            }
-
-            return res.json({
-                success: true,
-                message: 'Appointment rejected and deleted successfully',
-                data: {
-                    appointmentId: appointmentId,
-                    deleted: true
-                }
-            });
-        }
-
-        // For other statuses (approved, completed, cancelled), update the status
+        // Update the status of the appointment in the database
         const updateQuery = 'UPDATE Appointment SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE appointment_id = ?';
         const updateResult = await executeQuery(updateQuery, [status, appointmentId]);
 
@@ -376,7 +333,7 @@ router.put('/:appointmentId/status', authenticateToken, requireDoctor, [
         }
 
         // Build notification message
-        let notificationType = 'appointment_update';
+        let notificationType = 'appointment_reminder';
         let notificationMessage = '';
 
         switch (status) {
@@ -384,8 +341,12 @@ router.put('/:appointmentId/status', authenticateToken, requireDoctor, [
                 notificationType = 'appointment_approved';
                 notificationMessage = `Your appointment has been approved for ${appointment.appointment_date} at ${appointment.appointment_time}. Please arrive 15 minutes early.`;
                 break;
+            case 'rejected':
+                notificationType = 'appointment_rejected';
+                notificationMessage = `Your appointment request for ${appointment.appointment_date} at ${appointment.appointment_time} has been rejected. Please contact us to reschedule.`;
+                break;
             case 'completed':
-                notificationType = 'appointment_completed';
+                notificationType = 'appointment_reminder';
                 notificationMessage = 'Your appointment has been marked as completed. Thank you for visiting us.';
                 break;
             default:

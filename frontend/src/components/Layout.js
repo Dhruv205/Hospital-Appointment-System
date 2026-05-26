@@ -30,7 +30,7 @@ const Layout = () => {
     }
   );
 
-  const unreadCount = notificationData?.data?.unreadCount || 0;
+  const unreadCount = notificationData?.data?.data?.unreadCount || 0;
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },

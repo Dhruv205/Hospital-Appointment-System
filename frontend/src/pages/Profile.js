@@ -22,7 +22,23 @@ const Profile = () => {
     }
   );
 
-  const profile = profileData?.data || {};
+  const profile = profileData?.data?.data || {};
+
+  // Map snake_case database response keys to camelCase for the React Hook Form inputs
+  const formDefaultValues = React.useMemo(() => {
+    if (!profile) return {};
+    return {
+      firstName: profile.first_name || '',
+      lastName: profile.last_name || '',
+      phone: profile.phone || '',
+      dateOfBirth: profile.date_of_birth ? profile.date_of_birth.substring(0, 10) : '',
+      gender: profile.gender || '',
+      address: profile.address || '',
+      licenseNumber: profile.license_number || '',
+      experienceYears: profile.experience_years || 0,
+      consultationFee: profile.consultation_fee || 0,
+    };
+  }, [profile]);
 
   const {
     register: registerPersonal,
@@ -30,7 +46,7 @@ const Profile = () => {
     formState: { errors: personalErrors },
     reset: resetPersonal,
   } = useForm({
-    defaultValues: profile,
+    defaultValues: formDefaultValues,
   });
 
   const {
@@ -42,13 +58,30 @@ const Profile = () => {
 
   // Update form when profile data changes
   React.useEffect(() => {
-    if (profile) {
-      resetPersonal(profile);
+    if (formDefaultValues) {
+      resetPersonal(formDefaultValues);
     }
-  }, [profile, resetPersonal]);
+  }, [formDefaultValues, resetPersonal]);
 
   const onPersonalSubmit = (data) => {
-    updateProfile(data);
+    // Map camelCase keys back to snake_case for the database backend
+    const payload = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      phone: data.phone,
+    };
+    
+    if (user?.userType === 'patient') {
+      payload.date_of_birth = data.dateOfBirth || null;
+      payload.gender = data.gender || null;
+      payload.address = data.address || null;
+    } else if (user?.userType === 'doctor') {
+      payload.license_number = data.licenseNumber;
+      payload.experience_years = parseInt(data.experienceYears) || 0;
+      payload.consultation_fee = parseFloat(data.consultationFee) || 0.0;
+    }
+
+    updateProfile(payload);
   };
 
   const onPasswordSubmit = (data) => {

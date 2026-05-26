@@ -393,12 +393,28 @@ router.put('/change-password', authenticateToken, [
     }
 });
 
-// Logout (client-side token removal)
-router.post('/logout', authenticateToken, (req, res) => {
-    res.json({
-        success: true,
-        message: 'Logged out successfully'
-    });
+// Logout (session invalidation via token blacklisting)
+router.post('/logout', authenticateToken, async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        
+        if (token) {
+            const blacklistQuery = 'INSERT IGNORE INTO Blacklisted_Tokens (token) VALUES (?)';
+            await executeQuery(blacklistQuery, [token]);
+        }
+        
+        res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error during logout'
+        });
+    }
 });
 
 module.exports = router;
