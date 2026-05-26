@@ -32,7 +32,7 @@ const testConnection = async () => {
 // Execute query with error handling
 const executeQuery = async (query, params = []) => {
     try {
-        const [results] = await pool.execute(query, params);
+        const [results] = await pool.query(query, params);
         return { success: true, data: results };
     } catch (error) {
         console.error('Database query error:', error);
@@ -48,7 +48,7 @@ const executeTransaction = async (queries) => {
         
         const results = [];
         for (const { query, params } of queries) {
-            const [result] = await connection.execute(query, params);
+            const [result] = await connection.query(query, params);
             results.push(result);
         }
         
