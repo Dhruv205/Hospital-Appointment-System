@@ -3,7 +3,7 @@ import { useQuery } from 'react-query';
 import { appointmentAPI } from '../services/api';
 import { Link } from 'react-router-dom';
 import { patientAPI } from '../services/api';
-import { Calendar, Clock, Bell, Plus, Stethoscope, CheckCircle, AlertCircle, Users, XCircle, Award } from 'lucide-react';
+import { Calendar, Clock, Bell, Plus, Stethoscope, CheckCircle, AlertCircle, Users, XCircle, Award, Video } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const PatientDashboard = () => {
@@ -247,13 +247,23 @@ const PatientDashboard = () => {
                   <span>{formatTime(nextAppointment.appointment_time)}</span>
                 </div>
               </div>
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                  nextAppointment.status
-                )}`}
-              >
-                {nextAppointment.status}
-              </span>
+              <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end gap-2">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                    nextAppointment.status
+                  )}`}
+                >
+                  {nextAppointment.status}
+                </span>
+                {nextAppointment.status === 'approved' && (
+                  <Link
+                    to={`/appointments/${nextAppointment.appointment_id}/call`}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors"
+                  >
+                    <Video className="h-3.5 w-3.5 mr-1.5" /> Join Video Consultation
+                  </Link>
+                )}
+              </div>
             </div>
             {nextAppointment.problem_description && (
               <p className="mt-4 text-sm text-gray-600">
@@ -307,6 +317,16 @@ const PatientDashboard = () => {
                     <p className="mt-2 text-sm text-gray-600">
                       {appointment.problem_description}
                     </p>
+                    {appointment.status === 'approved' && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
+                        <Link
+                          to={`/appointments/${appointment.appointment_id}/call`}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors"
+                        >
+                          <Video className="h-3.5 w-3.5 mr-1.5" /> Join Video Consultation
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

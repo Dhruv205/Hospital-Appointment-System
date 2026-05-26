@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useAuth } from '../hooks/useAuth';
 import { appointmentAPI, patientAPI } from '../services/api';
-import { Calendar, Clock, User, Plus, Search, Filter, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, User, Plus, Search, Filter, CheckCircle, XCircle, Video } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -398,6 +399,16 @@ const Appointments = () => {
                         >
                           Mark Complete
                         </button>
+                      )}
+
+                      {appointment.status === 'approved' && (
+                        <Link
+                          to={`/appointments/${appointment.appointment_id}/call`}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors"
+                        >
+                          <Video className="h-3.5 w-3.5 mr-1" />
+                          Join Video Call
+                        </Link>
                       )}
                     </div>
                   </div>

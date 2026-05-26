@@ -9,6 +9,7 @@ import DoctorDashboard from './pages/DoctorDashboard';
 import Appointments from './pages/Appointments';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import VideoCall from './pages/VideoCall';
 import LoadingSpinner from './components/LoadingSpinner';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
             user?.userType === 'patient' ? <PatientDashboard /> : <DoctorDashboard />
           } />
           <Route path="appointments" element={<Appointments />} />
+          <Route path="appointments/:appointmentId/call" element={<VideoCall />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="profile" element={<Profile />} />
         </Route>

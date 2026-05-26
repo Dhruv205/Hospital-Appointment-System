@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { Link } from 'react-router-dom';
 import { appointmentAPI, doctorAPI } from '../services/api';
-import { Calendar, Clock, User, Bell, CheckCircle, AlertCircle, Users } from 'lucide-react';
+import { Calendar, Clock, User, Bell, CheckCircle, AlertCircle, Users, Video } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -242,6 +242,16 @@ const DoctorDashboard = () => {
                     <p className="mt-2 text-sm text-gray-600">
                       {appointment.problem_description}
                     </p>
+                    {appointment.status === 'approved' && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
+                        <Link
+                          to={`/appointments/${appointment.appointment_id}/call`}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors"
+                        >
+                          <Video className="h-3.5 w-3.5 mr-1.5" /> Start Video Consultation
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

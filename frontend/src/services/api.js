@@ -87,6 +87,12 @@ export const notificationAPI = {
   sendMessage: (data) => api.post('/notifications/send-message', data),
 };
 
+// Chat API
+export const chatAPI = {
+  getMessages: (appointmentId) => api.get(`/chat/${appointmentId}`),
+  sendMessage: (appointmentId, data) => api.post(`/chat/${appointmentId}`, data),
+};
+
 // Admin API
 export const adminAPI = {
   getStats: () => api.get('/admin/stats'),
