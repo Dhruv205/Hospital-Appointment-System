@@ -23,6 +23,10 @@
       "dest": "server.js"
     },
     {
+      "src": "/((?!api|uploads|static|favicon.ico|manifest.json|logo192.png|logo512.png|robots.txt).*)/?",
+      "dest": "frontend/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "frontend/$1"
     }
